@@ -1,0 +1,14 @@
+ 
+# Python 
+venv/ 
+__pycache__/ 
+*.pyc 
+*.pyo 
+data/ 
+*.csv 
+*.xlsx 
+.ipynb_checkpoints/ 
+.vscode/ 
+.idea/ 
+.DS_Store 
+Thumbs.db 
