@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils import load_all_data, filter_data, get_variable_label
+import os
 
 # Page configuration
 st.set_page_config(
@@ -14,6 +15,15 @@ st.set_page_config(
 # Title
 st.title("🌍 EthioClimate Analytics Dashboard")
 st.subheader("Historical Climate Data for COP32 Preparation (2015-2026)")
+
+# Show current directory for debugging (remove after deployment works)
+with st.expander("🔧 Debug Info (click to expand)"):
+    st.write(f"Current directory: {os.getcwd()}")
+    st.write(f"Files in current directory: {os.listdir('.') if os.path.exists('.') else 'N/A'}")
+    if os.path.exists('data'):
+        st.write(f"Files in data/: {os.listdir('data')}")
+    else:
+        st.write("data/ folder not found")
 
 # Load data
 with st.spinner("Loading climate data..."):
@@ -88,7 +98,8 @@ fig1, ax1 = plt.subplots(figsize=(12, 6))
 
 for country in selected_countries:
     country_data = temp_data[temp_data['Country'] == country]
-    ax1.plot(country_data['Year'], country_data['T2M'], marker='o', label=country, linewidth=2)
+    if not country_data.empty:
+        ax1.plot(country_data['Year'], country_data['T2M'], marker='o', label=country, linewidth=2)
 
 ax1.set_xlabel('Year')
 ax1.set_ylabel('Temperature (°C)')
@@ -108,11 +119,14 @@ fig2, ax2 = plt.subplots(figsize=(12, 6))
 # Filter out zeros for better visualization
 precip_data = filtered_df[filtered_df['PRECTOTCORR'] > 0]
 
-sns.boxplot(x='Country', y='PRECTOTCORR', data=precip_data, ax=ax2)
-ax2.set_xlabel('Country')
-ax2.set_ylabel('Precipitation (mm/day)')
-ax2.set_title('Distribution of Daily Precipitation by Country')
-ax2.set_yscale('log')
+if not precip_data.empty:
+    sns.boxplot(x='Country', y='PRECTOTCORR', data=precip_data, ax=ax2)
+    ax2.set_xlabel('Country')
+    ax2.set_ylabel('Precipitation (mm/day)')
+    ax2.set_title('Distribution of Daily Precipitation by Country')
+    ax2.set_yscale('log')
+else:
+    ax2.text(0.5, 0.5, 'No precipitation data available', ha='center', transform=ax2.transAxes)
 
 st.pyplot(fig2)
 
@@ -126,8 +140,11 @@ fig3, ax3 = plt.subplots(figsize=(12, 6))
 if variable == 'PRECTOTCORR':
     # For precipitation, show boxplot
     plot_data = filtered_df[filtered_df[variable] > 0]
-    sns.boxplot(x='Country', y=variable, data=plot_data, ax=ax3)
-    ax3.set_yscale('log')
+    if not plot_data.empty:
+        sns.boxplot(x='Country', y=variable, data=plot_data, ax=ax3)
+        ax3.set_yscale('log')
+    else:
+        ax3.text(0.5, 0.5, 'No precipitation data available', ha='center', transform=ax3.transAxes)
 else:
     # For other variables, show bar chart with mean
     var_data = filtered_df.groupby('Country')[variable].mean().reset_index()
